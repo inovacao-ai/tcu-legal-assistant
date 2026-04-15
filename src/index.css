@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Modern Dark Mode — Agente Jurídico TCU */
+    --background: 0 0% 5%; /* #0D0D0D */
+    --foreground: 0 0% 75%; /* #BFBFBF */
+
+    --card: 0 0% 10%; /* #1A1A1A */
+    --card-foreground: 0 0% 75%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 75%;
+
+    --primary: 14 100% 57%; /* #FF5722 */
+    --primary-foreground: 0 0% 5%; /* black text on orange */
+
+    --secondary: 0 0% 13%; /* slightly lighter surface */
+    --secondary-foreground: 0 0% 75%;
+
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 55%; /* #8C8C8C */
+
+    --accent: 17 64% 57%; /* #D9704A */
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 14 100% 57%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 75%;
+    --sidebar-primary: 14 100% 57%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 75%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 14 100% 57%;
+
+    /* Custom tokens */
+    --warning: 17 64% 57%;
+    --warning-foreground: 0 0% 5%;
+    --glass-bg: 0 0% 10%;
+    --glass-border: 0 0% 18%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Source Sans 3', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto Slab', serif;
+    color: hsl(0, 0%, 90%);
+  }
+
+  /* Global smooth transitions */
+  button, a, input, .transition-all {
+    transition: all 0.2s ease;
+  }
+}
+
+/* Glassmorphism utility */
+@layer utilities {
+  .glass {
+    background: hsl(var(--glass-bg) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border) / 0.5);
+  }
+
+  .glass-strong {
+    background: hsl(var(--glass-bg) / 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border) / 0.6);
+  }
+}
