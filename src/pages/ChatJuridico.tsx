@@ -363,8 +363,8 @@ const ChatJuridico = () => {
               }}
             >
               {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Bot size={14} className="text-primary" />
+                <div className="w-7 h-7 rounded-lg bg-sky-400/12 border border-sky-400/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot size={14} className="text-sky-400 glow-icon-sm" />
                 </div>
               )}
               <div className="max-w-2xl">
@@ -387,12 +387,12 @@ const ChatJuridico = () => {
                 {msg.role === "assistant" && msg.ragMeta && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {msg.ragMeta.mode === "rag" || (msg.ragMeta.rag_used && msg.ragMeta.mode !== "general") ? (
-                      <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-500/10 text-[10px] gap-1">
+                      <Badge variant="outline" className="border-sky-400/50 text-sky-300 bg-sky-400/10 text-[10px] gap-1 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
                         <ShieldCheck size={10} />
                         RAG ATIVO
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-blue-500/50 text-blue-400 bg-blue-500/10 text-[10px] gap-1">
+                      <Badge variant="outline" className="border-cyan-400/40 text-cyan-300 bg-cyan-400/8 text-[10px] gap-1">
                         <Globe size={10} />
                         MODO GERAL
                       </Badge>
@@ -421,11 +421,11 @@ const ChatJuridico = () => {
 
           {isLoading && (
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Bot size={14} className="text-primary" />
+              <div className="w-7 h-7 rounded-lg bg-sky-400/12 border border-sky-400/20 flex items-center justify-center">
+                <Bot size={14} className="text-sky-400 glow-icon-sm" />
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 size={14} className="animate-spin text-primary" />
+                <Loader2 size={14} className="animate-spin text-sky-400" />
                 <span>Consultando base jurídica e analisando...</span>
               </div>
             </div>

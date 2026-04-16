@@ -70,8 +70,8 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
-          <h1 className="font-slab text-2xl font-bold tracking-tight">AGENTE JURÍDICO</h1>
-          <span className="font-slab text-sm font-medium text-primary tracking-widest">TCU</span>
+          <h1 className="font-slab text-[36px] font-bold leading-tight tracking-tight">Agente Jurídico</h1>
+          <span className="font-sans text-[17px] font-medium text-primary tracking-[0.2em]">TCU</span>
         </div>
 
         <div className="glass-strong rounded-2xl shadow-panel-lg p-8">
@@ -87,34 +87,34 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">Nome</label>
+                <label className="block text-sm font-normal text-foreground mb-1.5">Nome</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
+                  className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground placeholder:font-light focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
                   placeholder="Seu nome completo"
                 />
               </div>
             )}
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">E-mail</label>
+              <label className="block text-sm font-normal text-foreground mb-1.5">E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground placeholder:font-light focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
                 placeholder="seu@email.gov.br"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">Senha</label>
+              <label className="block text-sm font-normal text-foreground mb-1.5">Senha</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground placeholder:font-light focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all duration-200"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -123,7 +123,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-bold hover:bg-accent transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
+              className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-base font-semibold hover:bg-accent transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
             >
               {isLoading && <Loader2 size={14} className="animate-spin" />}
               {isSignUp ? "Criar Conta" : "Entrar"}
@@ -135,14 +135,14 @@ const Login = () => {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-xs text-muted-foreground hover:text-primary transition-all duration-200"
+                className="text-[13px] font-normal text-muted-foreground hover:text-primary transition-all duration-200"
               >
                 Esqueci minha senha
               </button>
             )}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-xs text-primary hover:text-accent transition-all duration-200"
+              className="text-[13px] font-normal text-primary hover:text-accent transition-all duration-200"
             >
               {isSignUp ? "Já tem conta? Faça login" : "Não tem conta? Cadastre-se"}
             </button>

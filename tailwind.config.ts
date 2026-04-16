@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        slab: ["Roboto Slab", "serif"],
-        sans: ["Source Sans 3", "sans-serif"],
+        slab: ["Playfair Display", "serif"],
+        sans: ["Inter", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -75,8 +75,9 @@ export default {
       boxShadow: {
         panel: "0 2px 8px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3)",
         "panel-lg": "0 8px 24px 0 rgba(0, 0, 0, 0.4), 0 4px 8px -4px rgba(0, 0, 0, 0.3)",
-        glow: "0 0 20px rgba(255, 87, 34, 0.15)",
-        "glow-sm": "0 0 10px rgba(255, 87, 34, 0.1)",
+        glow: "0 0 20px rgba(56, 189, 248, 0.22)",
+        "glow-sm": "0 0 10px rgba(56, 189, 248, 0.16)",
+        "glow-icon": "0 0 12px rgba(56, 189, 248, 0.45)",
       },
       keyframes: {
         "accordion-down": {

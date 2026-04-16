@@ -59,10 +59,10 @@ const AppSidebar = () => {
     <aside className="w-60 flex-shrink-0 glass-strong flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-border/50">
-        <h1 className="font-slab text-sm font-bold tracking-tight leading-tight">
+        <h1 className="font-slab text-sm font-bold tracking-tight leading-tight text-foreground">
           AGENTE JURÍDICO
         </h1>
-        <span className="font-slab text-xs font-medium text-primary tracking-widest">TCU</span>
+        <span className="font-sans text-xs font-medium text-sky-400 tracking-widest glow-icon-sm">TCU</span>
       </div>
 
       {/* Navigation */}
@@ -77,8 +77,8 @@ const AppSidebar = () => {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-glow-sm"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  ? "bg-sky-500/90 text-white shadow-[0_0_14px_rgba(56,189,248,0.30)]"
+                  : "text-muted-foreground hover:bg-secondary hover:text-sky-300"
               }`}
             >
               <item.icon size={18} strokeWidth={1.5} />
@@ -92,7 +92,7 @@ const AppSidebar = () => {
       <div className="px-3 pb-2">
         <button
           onClick={() => navigate("/chat")}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-sm transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-sky-500/90 text-white hover:bg-sky-400 shadow-[0_0_14px_rgba(56,189,248,0.25)] hover:shadow-[0_0_18px_rgba(56,189,248,0.40)] transition-all duration-200"
         >
           <Plus size={16} strokeWidth={2} />
           Novo Chat

@@ -98,13 +98,19 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
           {statCards.map((stat) => (
-            <div key={stat.label} className="bg-card rounded-xl shadow-panel p-6 hover:shadow-panel-lg transition-all duration-200">
-              <div className="flex items-center justify-between mb-4">
-                <stat.icon
-                  size={22}
-                  strokeWidth={1.5}
-                  className={stat.isWarning ? "text-accent" : "text-primary"}
-                />
+            <div key={stat.label} className="bg-card rounded-xl shadow-panel p-6 hover:shadow-panel-lg hover:border hover:border-sky-400/15 transition-all duration-200 border border-transparent">
+              <div className="flex items-center justify-between mb-5">
+                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${
+                  stat.isWarning
+                    ? "bg-amber-400/10 border-amber-400/20"
+                    : "bg-sky-400/10 border-sky-400/20"
+                }`}>
+                  <stat.icon
+                    size={20}
+                    strokeWidth={1.5}
+                    className={stat.isWarning ? "text-amber-400 glow-icon-warn" : "text-sky-400 glow-icon-sm"}
+                  />
+                </div>
               </div>
               <p className="font-slab text-3xl font-bold">{stat.value}</p>
               <p className="text-xs text-muted-foreground mt-1.5">{stat.label}</p>
@@ -159,7 +165,9 @@ const Dashboard = () => {
                     <div className="flex items-start gap-3">
                       <div
                         className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                          (doc.risks_found || 0) >= 3 ? "bg-primary shadow-glow-sm" : "bg-accent"
+                          (doc.risks_found || 0) >= 3
+                            ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.45)]"
+                            : "bg-amber-400/50"
                         }`}
                       />
                       <div>

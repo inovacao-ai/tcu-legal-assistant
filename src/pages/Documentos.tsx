@@ -65,17 +65,17 @@ function getStageState(docStatus: string, stageKey: string): "done" | "active" |
 }
 
 const stageColors = {
-  done: "text-emerald-500",
-  active: "text-blue-500 animate-pulse",
+  done: "text-sky-400 glow-icon-sm",
+  active: "text-cyan-400 animate-pulse",
   error: "text-destructive",
-  pending: "text-muted-foreground/40",
+  pending: "text-muted-foreground/30",
 };
 
 const stageBgColors = {
-  done: "bg-emerald-500/10 border-emerald-500/30",
-  active: "bg-blue-500/10 border-blue-500/30",
+  done: "bg-sky-400/10 border-sky-400/25",
+  active: "bg-cyan-400/10 border-cyan-400/30",
   error: "bg-destructive/10 border-destructive/30",
-  pending: "bg-muted/30 border-border/30",
+  pending: "bg-muted/20 border-border/20",
 };
 
 function formatFileSize(bytes: number | null) {
@@ -421,17 +421,17 @@ const Documentos = () => {
                     <div className="flex flex-col items-center gap-1">
                       <div className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center ${stageBgColors[state]}`}>
                         {state === "active" ? (
-                          <Loader2 size={18} className="text-blue-500 animate-spin" />
+                          <Loader2 size={18} className="text-cyan-400 animate-spin" />
                         ) : (
                           <Icon size={18} className={stageColors[state]} />
                         )}
                       </div>
-                      <span className={`text-[10px] font-medium ${state === "done" ? "text-emerald-500" : state === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+                      <span className={`text-[10px] font-medium ${state === "done" ? "text-sky-400" : state === "error" ? "text-destructive" : "text-muted-foreground"}`}>
                         {stage.label}
                       </span>
                     </div>
                     {idx < PIPELINE_STAGES.length - 1 && (
-                      <div className={`w-6 h-0.5 mb-4 ${state === "done" ? "bg-emerald-500/40" : "bg-border"}`} />
+                      <div className={`w-6 h-0.5 mb-4 ${state === "done" ? "bg-sky-400/35" : "bg-border/40"}`} />
                     )}
                   </div>
                 );

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,51 +6,58 @@
 
 @layer base {
   :root {
-    /* Modern Dark Mode — Agente Jurídico TCU */
-    --background: 0 0% 5%; /* #0D0D0D */
-    --foreground: 0 0% 75%; /* #BFBFBF */
+    /* Paleta TCU — #0E1826 · #012340 · #2E4959 · #687E8C · #F2F2F2 */
 
-    --card: 0 0% 10%; /* #1A1A1A */
-    --card-foreground: 0 0% 75%;
+    /* Camada base — o mais escuro */
+    --background:              215 46% 10%;   /* #0E1826 */
+    --foreground:              0   0% 95%;    /* #F2F2F2 */
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 75%;
+    /* Superfície de card — navy profundo */
+    --card:                    209 98% 13%;   /* #012340 */
+    --card-foreground:         0   0% 95%;
 
-    --primary: 14 100% 57%; /* #FF5722 */
-    --primary-foreground: 0 0% 5%; /* black text on orange */
+    --popover:                 209 98% 13%;
+    --popover-foreground:      0   0% 95%;
 
-    --secondary: 0 0% 13%; /* slightly lighter surface */
-    --secondary-foreground: 0 0% 75%;
+    /* Acento interativo — sky-500, ciano mais vivido para máximo contraste */
+    --primary:                 199 89% 48%;   /* #0EA5E9 sky-500 */
+    --primary-foreground:      215 46% 10%;   /* #0E1826 — texto escuro no botão */
 
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 55%; /* #8C8C8C */
+    /* Superfície elevada — navy médio */
+    --secondary:               202 32% 26%;   /* #2E4959 */
+    --secondary-foreground:    0   0% 95%;
 
-    --accent: 17 64% 57%; /* #D9704A */
-    --accent-foreground: 0 0% 5%;
+    --muted:                   209 98% 13%;   /* #012340 */
+    --muted-foreground:        203 18% 56%;   /* #687E8C +8%L → contraste ≥4.5:1 */
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 95%;
+    --accent:                  202 32% 32%;   /* #2E4959 + luminosidade */
+    --accent-foreground:       0   0% 95%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 14 100% 57%;
+    --destructive:             0 70% 50%;
+    --destructive-foreground:  0   0% 95%;
+
+    /* Bordas e inputs — entre #012340 e #2E4959 */
+    --border:                  202 25% 20%;
+    --input:                   209 98% 13%;   /* #012340 — fundo dos campos */
+    --ring:                    199 89% 48%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 75%;
-    --sidebar-primary: 14 100% 57%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 0 0% 75%;
-    --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 14 100% 57%;
+    /* Sidebar */
+    --sidebar-background:           209 98% 13%;   /* #012340 */
+    --sidebar-foreground:           0   0% 95%;
+    --sidebar-primary:              199 89% 48%;
+    --sidebar-primary-foreground:   215 46% 10%;
+    --sidebar-accent:               202 32% 26%;   /* #2E4959 */
+    --sidebar-accent-foreground:    0   0% 95%;
+    --sidebar-border:               202 25% 18%;
+    --sidebar-ring:                 199 89% 48%;
 
-    /* Custom tokens */
-    --warning: 17 64% 57%;
-    --warning-foreground: 0 0% 5%;
-    --glass-bg: 0 0% 10%;
-    --glass-border: 0 0% 18%;
+    /* Tokens customizados */
+    --warning:             38 90% 55%;    /* âmbar — semântico, fora da paleta */
+    --warning-foreground:  215 46% 10%;
+    --glass-bg:            209 98% 13%;   /* #012340 */
+    --glass-border:        202 32% 26%;   /* #2E4959 */
   }
 
   * {
@@ -59,17 +66,58 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Source Sans 3', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Roboto Slab', serif;
-    color: hsl(0, 0%, 90%);
+    font-family: 'Playfair Display', serif;
+    color: hsl(0, 0%, 95%); /* #F2F2F2 */
   }
 
   /* Global smooth transitions */
   button, a, input, .transition-all {
     transition: all 0.2s ease;
+  }
+}
+
+/* ================================================
+   Icon glow utilities — sky/cyan accent
+   ================================================ */
+@layer utilities {
+  /* Ícone brilhante — estado default */
+  .glow-icon {
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.50));
+  }
+  /* Ícone suave — uso em elementos menores */
+  .glow-icon-sm {
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.40));
+  }
+  /* Ícone máximo brilho — hover / destaque */
+  .glow-icon-lg {
+    filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.60));
+  }
+  /* Glow para ícones de alerta (amber) */
+  .glow-icon-warn {
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.45));
+  }
+
+  /* Botão de ícone interativo — estados completos */
+  .icon-action {
+    color: hsl(203 18% 56%);
+    transition: color 0.2s ease, filter 0.2s ease;
+  }
+  .icon-action:hover {
+    color: #38BDF8;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45));
+  }
+  .icon-action:active {
+    color: #0EA5E9;
+    filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.35));
+  }
+  .icon-action:focus-visible {
+    outline: 2px solid #38BDF8;
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
