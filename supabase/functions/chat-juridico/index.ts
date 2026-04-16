@@ -361,6 +361,7 @@ serve(async (req) => {
     let cleanAnswer = answer;
 
     if (!isRagMode) {
+      // Strip any LLM-generated warning — we inject our own notice below.
       const sourcesRegex = /(?:---\s*\n\s*)?(?:\*{0,2})(?:Fontes?\s*(?:de\s+conhecimento\s+geral|consultadas?|citadas?)?)\s*(?:\*{0,2})\s*:?\s*\n([\s\S]*?)(?:\n\s*⚠️|$)/i;
       const sourcesMatch = answer.match(sourcesRegex);
       if (sourcesMatch) {
@@ -399,6 +400,8 @@ serve(async (req) => {
           .replace(/\n\s*⚠️[\s\S]*$/, "")
           .trim();
       }
+      // Always prepend the "not found" notice before the general answer.
+      cleanAnswer = `⚠️ **Nenhum documento encontrado na base vetorial para esta consulta.**\n\nA resposta abaixo é baseada no conhecimento geral do assistente jurídico — não em documentos indexados.\n\n---\n\n${cleanAnswer}`;
     }
 
     const structuredResponse = {
