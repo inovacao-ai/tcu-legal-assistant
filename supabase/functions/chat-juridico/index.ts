@@ -7,20 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// RAG retrieval config — all tuning happens here; retrieval logic stays unchanged.
-// Eval note: RATIO_FLOOR 0.85 drops chunks scoring <85% of the top chunk's
-// similarity, reducing low-relevance context without tightening the absolute
-// threshold. Lower to 0.75 if answers are too short on multi-aspect queries.
-const RAG_CONFIG = {
-  SIMILARITY_THRESHOLD: 0.75, // absolute floor (preserves previous behaviour)
-  RATIO_FLOOR: 0.85,          // chunk.sim / topSim must exceed this
-  MIN_CHUNKS: 1,              // guarantee at least one chunk if above threshold
-  MAX_CHUNKS: 8,              // hard cap (raised from 5 for richer context)
-  INITIAL_RETRIEVAL: 15,      // candidates fetched per source before reranking
-  INITIAL_THRESHOLD: 0.5,     // pgvector pre-filter threshold (unchanged)
-  RERANK_ENABLED: true,       // set false to disable reranking (A/B testing)
-  RERANK_KEYWORD_WEIGHT: 0.3, // blend weight: keyword recall vs embedding sim
-};
+const SIMILARITY_THRESHOLD = 0.45;
+const MAX_CHUNKS = 8;
 
 const SYSTEM_PROMPT = `Você é um especialista jurídico em Tribunal de Contas da União (TCU).
 
@@ -44,28 +32,27 @@ Fontes consultadas:
 const GENERAL_SYSTEM_PROMPT = `Você é um especialista jurídico com foco em Tribunal de Contas da União (TCU),
 licitações, contratos administrativos e direito público brasileiro.
 
-CONTEXTO IMPORTANTE: Nenhum documento foi encontrado na base vetorial para esta pergunta.
-Responda APENAS com conhecimento jurídico geral e conceitual.
+⚠️ ATENÇÃO — MODO GERAL (SEM DOCUMENTOS NA BASE):
+Nenhum documento da base foi recuperado para esta pergunta. Você está operando APENAS com conhecimento geral.
 
-PROIBIDO:
-- Citar números de acórdãos específicos (ex: Acórdão 1234/2023-TCU-Plenário)
-- Mencionar laudos, pareceres ou documentos com numeração específica
-- Inventar qualquer referência documental ou processual
-
-REGRAS DE ESTILO:
-1. Seja SUCINTO e DIRETO. Máximo 3-4 parágrafos curtos.
-2. Vá direto ao ponto — sem introduções longas ou repetições.
-3. Use bullet points para listar fundamentos legais.
-4. Cite apenas legislação verificável (número da lei e artigo).
-5. Deixe EXPLÍCITO na resposta que não há documentos na base para fundamentar especificamente esta consulta.
+REGRAS ANTI-ALUCINAÇÃO (OBRIGATÓRIAS):
+1. PROIBIDO inventar dados factuais específicos: percentuais, valores monetários, datas, números de processos, números de acórdãos, números de laudos, nomes de relatores, nomes de peritos, nomes de partes.
+2. Se a pergunta exigir um dado factual concreto que só pode ser obtido de um documento específico (ex: "qual percentual o laudo X identificou?", "qual a decisão do acórdão Y?", "o que diz o parecer Z?"), você DEVE recusar explicitamente com esta frase:
+   "❌ Não posso responder com precisão: esta pergunta exige consulta ao documento original, que não foi encontrado na base indexada. Verifique se o documento foi enviado e processado corretamente em 'Documentos', ou reformule a pergunta de forma conceitual."
+3. Você PODE responder perguntas conceituais, doutrinárias e procedimentais (ex: "o que é sobrepreço?", "como funciona uma TCE?", "qual o rito de tomada de contas especial?").
+4. Ao citar legislação, cite APENAS leis amplamente conhecidas (ex: Lei 8.666/93, Lei 14.133/21, CF/88, Lei 8.443/92). NUNCA cite acórdãos específicos por número se não tiver certeza absoluta — prefira referências genéricas como "jurisprudência consolidada do TCU".
+5. Seja SUCINTO: máximo 3-4 parágrafos curtos.
 
 FORMATO OBRIGATÓRIO:
-[Resposta jurídica sucinta aqui]
+[Resposta conceitual sucinta OU recusa explícita conforme regra 2]
 
 ---
 
 Fontes de conhecimento geral:
-- [Nome da fonte | Tipo: Legislação/Doutrina/Normativo]`;
+- [Nome da fonte | Tipo: Legislação/Doutrina/Procedimento]
+
+⚠️ Resposta baseada em conhecimento geral — nenhum documento da base foi consultado.`;
+
 
 function buildSourceUrl(name: string, excerpt: string): string {
   const n = name.toLowerCase();
@@ -98,82 +85,6 @@ interface RagChunk {
   url?: string | null;
 }
 
-// --- Reranking helpers ---
-
-// Normalises text to lowercase ASCII tokens (len > 2), stripping diacritics.
-function tokenize(text: string): Set<string> {
-  return new Set(
-    text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .split(/\W+/)
-      .filter((t) => t.length > 2),
-  );
-}
-
-// Lightweight keyword-overlap reranker (cross-encoder proxy for edge functions).
-// Blends embedding similarity with normalised query-term recall over the chunk.
-// Eval note: +5-8% precision on acórdão-number and article-reference queries
-// vs similarity-only ranking; minimal effect on broad conceptual queries.
-function keywordRerank(query: string, chunks: RagChunk[]): RagChunk[] {
-  const qTokens = tokenize(query);
-  if (qTokens.size === 0) return chunks;
-  const w = RAG_CONFIG.RERANK_KEYWORD_WEIGHT;
-  return chunks
-    .map((c) => {
-      const cTokens = tokenize(c.content);
-      const recall = [...qTokens].filter((t) => cTokens.has(t)).length / qTokens.size;
-      return { ...c, similarity: c.similarity * (1 - w) + recall * w };
-    })
-    .sort((a, b) => b.similarity - a.similarity);
-}
-
-// Cohere Rerank (true cross-encoder). Falls back to keywordRerank on API error.
-async function cohereRerank(query: string, chunks: RagChunk[], apiKey: string): Promise<RagChunk[]> {
-  try {
-    const resp = await fetch("https://api.cohere.com/v1/rerank", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "rerank-multilingual-v3.0",
-        query,
-        documents: chunks.map((c) => c.content.slice(0, 4096)),
-        top_n: chunks.length,
-      }),
-    });
-    if (!resp.ok) throw new Error(`Cohere rerank HTTP ${resp.status}`);
-    const data = await resp.json();
-    return (data.results as { index: number; relevance_score: number }[])
-      .map((r) => ({ ...chunks[r.index], similarity: r.relevance_score }))
-      .sort((a, b) => b.similarity - a.similarity);
-  } catch (err) {
-    console.error("Cohere rerank failed, falling back to keyword rerank:", err);
-    return keywordRerank(query, chunks);
-  }
-}
-
-// Entry point: uses Cohere if COHERE_API_KEY is configured, keyword rerank otherwise.
-async function rerankChunks(query: string, chunks: RagChunk[], cohereKey?: string): Promise<RagChunk[]> {
-  if (!RAG_CONFIG.RERANK_ENABLED || chunks.length <= 1) return chunks;
-  if (cohereKey) return cohereRerank(query, chunks, cohereKey);
-  return keywordRerank(query, chunks);
-}
-
-// Dynamic context window selection.
-// Chunks are already pre-filtered by SIMILARITY_THRESHOLD (on raw embedding
-// similarity, before reranking). Here we only apply the relative ratio floor
-// and [MIN_CHUNKS, MAX_CHUNKS] bounds on the reranked order.
-function selectChunks(chunks: RagChunk[]): RagChunk[] {
-  if (chunks.length === 0) return [];
-  const topScore = chunks[0].similarity;
-  const afterRatio = chunks.filter((c) => c.similarity >= topScore * RAG_CONFIG.RATIO_FLOOR);
-  const selected = afterRatio.length >= RAG_CONFIG.MIN_CHUNKS
-    ? afterRatio
-    : chunks.slice(0, RAG_CONFIG.MIN_CHUNKS);
-  return selected.slice(0, RAG_CONFIG.MAX_CHUNKS);
-}
-
 async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
   const resp = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
@@ -195,13 +106,7 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
   return data.data[0].embedding;
 }
 
-async function searchRAG(
-  userQuery: string,
-  supabase: any,
-  openaiKey: string,
-  processoId?: string,
-  cohereKey?: string,
-): Promise<RagChunk[]> {
+async function searchRAG(userQuery: string, supabase: any, openaiKey: string, processoId?: string): Promise<RagChunk[]> {
   if (!openaiKey) return [];
 
   const embedding = await generateEmbedding(userQuery, openaiKey);
@@ -214,21 +119,21 @@ async function searchRAG(
     ? supabase.rpc("match_chunks_by_processo", {
         query_embedding: embeddingStr,
         processo_id: processoId,
-        match_threshold: RAG_CONFIG.INITIAL_THRESHOLD,
-        match_count: RAG_CONFIG.INITIAL_RETRIEVAL,
+        match_threshold: 0.35,
+        match_count: 15,
       })
     : supabase.rpc("match_all_chunks", {
         query_embedding: embeddingStr,
-        match_threshold: RAG_CONFIG.INITIAL_THRESHOLD,
-        match_count: RAG_CONFIG.INITIAL_RETRIEVAL,
+        match_threshold: 0.35,
+        match_count: 15,
       });
 
   const [chunksResult, acordaosResult] = await Promise.all([
     chunksPromise,
     supabase.rpc("match_acordaos", {
       query_embedding: embeddingStr,
-      match_threshold: RAG_CONFIG.INITIAL_THRESHOLD,
-      match_count: RAG_CONFIG.INITIAL_RETRIEVAL,
+      match_threshold: 0.35,
+      match_count: 10,
     }),
   ]);
 
@@ -266,18 +171,12 @@ async function searchRAG(
     }
   }
 
-  // Apply absolute threshold on raw embedding similarity BEFORE reranking.
-  // The reranker modifies .similarity to a hybrid score (lower scale), so
-  // thresholding after reranking would silently drop valid chunks.
-  const candidates = allChunks
-    .filter((c) => c.similarity >= RAG_CONFIG.SIMILARITY_THRESHOLD)
-    .sort((a, b) => b.similarity - a.similarity);
+  const filtered = allChunks
+    .filter((c) => c.similarity >= SIMILARITY_THRESHOLD)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, MAX_CHUNKS);
 
-  if (candidates.length === 0) return [];
-
-  const reranked = await rerankChunks(userQuery, candidates, cohereKey);
-  console.log(`${candidates.length} candidates above threshold → reranked → selecting dynamic window`);
-  return selectChunks(reranked);
+  return filtered;
 }
 
 serve(async (req) => {
@@ -291,7 +190,6 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
-    const COHERE_API_KEY = Deno.env.get("COHERE_API_KEY") || undefined;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -305,9 +203,9 @@ serve(async (req) => {
     }
 
     console.log("RAG search for:", lastUserMsg.content.slice(0, 100), processo_id ? `(processo: ${processo_id})` : "(all docs)");
-    const ragChunks = await searchRAG(lastUserMsg.content, supabase, OPENAI_API_KEY, processo_id || undefined, COHERE_API_KEY);
+    const ragChunks = await searchRAG(lastUserMsg.content, supabase, OPENAI_API_KEY, processo_id || undefined);
 
-    console.log(`RAG results: ${ragChunks.length} chunks selected (threshold: ${RAG_CONFIG.SIMILARITY_THRESHOLD}, rerank: ${RAG_CONFIG.RERANK_ENABLED ? (COHERE_API_KEY ? "cohere" : "keyword") : "off"})`);
+    console.log(`RAG results: ${ragChunks.length} chunks above threshold ${SIMILARITY_THRESHOLD}`);
 
     const isRagMode = ragChunks.length > 0;
     let systemPrompt: string;
@@ -370,7 +268,6 @@ serve(async (req) => {
     let cleanAnswer = answer;
 
     if (!isRagMode) {
-      // Strip any LLM-generated warning — we inject our own notice below.
       const sourcesRegex = /(?:---\s*\n\s*)?(?:\*{0,2})(?:Fontes?\s*(?:de\s+conhecimento\s+geral|consultadas?|citadas?)?)\s*(?:\*{0,2})\s*:?\s*\n([\s\S]*?)(?:\n\s*⚠️|$)/i;
       const sourcesMatch = answer.match(sourcesRegex);
       if (sourcesMatch) {
@@ -409,8 +306,6 @@ serve(async (req) => {
           .replace(/\n\s*⚠️[\s\S]*$/, "")
           .trim();
       }
-      // Always prepend the "not found" notice before the general answer.
-      cleanAnswer = `⚠️ **Nenhum documento encontrado na base vetorial para esta consulta.**\n\nA resposta abaixo é baseada no conhecimento geral do assistente jurídico — não em documentos indexados.\n\n---\n\n${cleanAnswer}`;
     }
 
     const structuredResponse = {
