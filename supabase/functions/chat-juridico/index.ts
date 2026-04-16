@@ -43,14 +43,21 @@ Fontes consultadas:
 
 const GENERAL_SYSTEM_PROMPT = `Você é um especialista jurídico com foco em Tribunal de Contas da União (TCU),
 licitações, contratos administrativos e direito público brasileiro.
-Responda com base no seu conhecimento geral.
+
+CONTEXTO IMPORTANTE: Nenhum documento foi encontrado na base vetorial para esta pergunta.
+Responda APENAS com conhecimento jurídico geral e conceitual.
+
+PROIBIDO:
+- Citar números de acórdãos específicos (ex: Acórdão 1234/2023-TCU-Plenário)
+- Mencionar laudos, pareceres ou documentos com numeração específica
+- Inventar qualquer referência documental ou processual
 
 REGRAS DE ESTILO:
 1. Seja SUCINTO e DIRETO. Máximo 3-4 parágrafos curtos.
 2. Vá direto ao ponto — sem introduções longas ou repetições.
 3. Use bullet points para listar fundamentos legais.
-4. Cite legislação e jurisprudência de forma objetiva (número e artigo).
-5. NÃO faça longas explicações doutrinárias — apenas o essencial.
+4. Cite apenas legislação verificável (número da lei e artigo).
+5. Deixe EXPLÍCITO na resposta que não há documentos na base para fundamentar especificamente esta consulta.
 
 FORMATO OBRIGATÓRIO:
 [Resposta jurídica sucinta aqui]
@@ -58,10 +65,7 @@ FORMATO OBRIGATÓRIO:
 ---
 
 Fontes de conhecimento geral:
-- [Nome da fonte | Tipo: Legislação/Jurisprudência/Doutrina/Normativo]
-
-Liste as leis, acórdãos e normativos citados.
-⚠️ Resposta baseada em conhecimento geral — nenhum documento encontrado na base.`;
+- [Nome da fonte | Tipo: Legislação/Doutrina/Normativo]`;
 
 function buildSourceUrl(name: string, excerpt: string): string {
   const n = name.toLowerCase();
