@@ -157,18 +157,16 @@ async function rerankChunks(query: string, chunks: RagChunk[], cohereKey?: strin
 }
 
 // Dynamic context window selection.
-// 1. Absolute threshold (SIMILARITY_THRESHOLD)
-// 2. Relative ratio floor vs top chunk (RATIO_FLOOR)
-// 3. Clamp to [MIN_CHUNKS, MAX_CHUNKS]
-// If ratio filter yields fewer than MIN_CHUNKS, tops up from the threshold pool.
+// Chunks are already pre-filtered by SIMILARITY_THRESHOLD (on raw embedding
+// similarity, before reranking). Here we only apply the relative ratio floor
+// and [MIN_CHUNKS, MAX_CHUNKS] bounds on the reranked order.
 function selectChunks(chunks: RagChunk[]): RagChunk[] {
-  const aboveMin = chunks.filter((c) => c.similarity >= RAG_CONFIG.SIMILARITY_THRESHOLD);
-  if (aboveMin.length === 0) return [];
-  const topSim = aboveMin[0].similarity;
-  const afterRatio = aboveMin.filter((c) => c.similarity >= topSim * RAG_CONFIG.RATIO_FLOOR);
+  if (chunks.length === 0) return [];
+  const topScore = chunks[0].similarity;
+  const afterRatio = chunks.filter((c) => c.similarity >= topScore * RAG_CONFIG.RATIO_FLOOR);
   const selected = afterRatio.length >= RAG_CONFIG.MIN_CHUNKS
     ? afterRatio
-    : aboveMin.slice(0, RAG_CONFIG.MIN_CHUNKS);
+    : chunks.slice(0, RAG_CONFIG.MIN_CHUNKS);
   return selected.slice(0, RAG_CONFIG.MAX_CHUNKS);
 }
 
@@ -264,10 +262,17 @@ async function searchRAG(
     }
   }
 
-  // Sort candidates by embedding similarity, then rerank and apply dynamic window.
-  const sorted = allChunks.sort((a, b) => b.similarity - a.similarity);
-  const reranked = await rerankChunks(userQuery, sorted, cohereKey);
-  console.log(`Reranked ${reranked.length} candidates → selecting dynamic window`);
+  // Apply absolute threshold on raw embedding similarity BEFORE reranking.
+  // The reranker modifies .similarity to a hybrid score (lower scale), so
+  // thresholding after reranking would silently drop valid chunks.
+  const candidates = allChunks
+    .filter((c) => c.similarity >= RAG_CONFIG.SIMILARITY_THRESHOLD)
+    .sort((a, b) => b.similarity - a.similarity);
+
+  if (candidates.length === 0) return [];
+
+  const reranked = await rerankChunks(userQuery, candidates, cohereKey);
+  console.log(`${candidates.length} candidates above threshold → reranked → selecting dynamic window`);
   return selectChunks(reranked);
 }
 
